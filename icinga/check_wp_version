@@ -1,0 +1,22 @@
+#!/usr/bin/php
+# A very simplistic nrpe check to monitor when WordPress is autoupdated
+# Usage: Add the followin line to /etc/nagios/nrpe_local.cfg,
+# command[check_wp_version]=/usr/local/lib/nagios/plugins/check_wp_version /path/to/your/wordpress/root/
+<?php
+$verFile = '/var/tmp/wp_version';
+include $argv[1].'wp-includes/version.php';
+
+//Save latest version if there is no state file present
+if(!is_file($verFile) || (isset($argv[2]) && $argv='update')) {
+  file_put_contents($verFile, $wp_version);
+}
+
+$version = file_get_contents($verFile);
+if ($version != $wp_version) {
+  echo "CRITICAL - New WordPress version, version ".$wp_version." installed. Run ".implode(' ', $argv)." update; to reset.\n";
+  exit(2);
+}
+
+echo "OK - WordPress has not been updated\n";
+exit(0);
+?>
