@@ -9,8 +9,11 @@ import (
 )
 
 func main() {
+        var sizeRange [64]int
+        var maxSize int = 0
+
         if len(os.Args) < 2 {
-                fmt.Println("Not enough arguments")
+                fmt.Println("No path specified")
                 os.Exit(1)
         }
 
@@ -20,9 +23,6 @@ func main() {
                 os.Exit(1)
         }
         
-        var sizeRange [64]int
-        var maxSize int = 0
-
         filepath.Walk(
                 os.Args[1],
                 func(path string, f os.FileInfo, err error) error {
