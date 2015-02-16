@@ -21,7 +21,7 @@ func main() {
         }
         
         var sizeRange [64]int
-        var maxCount, maxSize int = 0, 0
+        var maxSize int = 0
 
         filepath.Walk(
                 os.Args[1],
@@ -30,25 +30,24 @@ func main() {
                                 tmp := int(findSize(f.Size(), 0))
                                 if maxSize < tmp { maxSize = tmp }
                                 sizeRange[tmp]++
-                                if sizeRange[tmp] > maxCount { maxCount = sizeRange[tmp] }
                         }
                         return nil
                 },
         )
 
-        formatTable(sizeRange, maxCount, maxSize)
+        formatTable(sizeRange, maxSize)
 }
 
 
 func findSize(number int64, exp float64) float64 {
-  if number < (1024*int64(math.Pow(2, exp))) || number == 64 {
-    return exp
-  }
+        if number < (1024*int64(math.Pow(2, exp))) || number == 64 {
+                return exp
+        }
   
-  return findSize(number, exp+1)
+        return findSize(number, exp+1)
 }
 
-func formatTable(sizeRange [64]int, maxCount int, maxSize int) {
+func formatTable(sizeRange [64]int, maxSize int) {
         for i := 0; i <= maxSize; i++ {
                 fmt.Printf("# <%6s: %d\n", formatNum(math.Pow(2,float64(i)), 0), sizeRange[i])
         }
