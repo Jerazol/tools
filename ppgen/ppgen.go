@@ -13,32 +13,30 @@ import (
 )
 
 func main() {
-  var dict        string = "/usr/share/dict/"
-  var words       []string
+  var dicts       string = "/usr/share/dict/"
   var err         error
-  var dictLength  *big.Int
 
   lang, pplen, wordMaxLen := setFlags()
-  langPath := dict + *lang
+  langPath := dicts + *lang
 
   if len(*lang) == 0 {
-    usage(dict)
+    usage(dicts)
     os.Exit(1)
   }
 
   _, err = os.Stat(langPath)
   if os.IsNotExist(err) {
     fmt.Printf("Language \"%s\" is not installed\n\n", *lang)
-    usage(dict)
+    usage(dicts)
     os.Exit(1)
   }
 
-  words = readLines(langPath, *wordMaxLen)
+  words := readLines(langPath, *wordMaxLen)
   fmt.Printf("  - %d\n", *pplen)
   fmt.Printf("  - %d\n", len(words))
   fmt.Printf("  - %d\n", *wordMaxLen)
 
-  dictLength = big.NewInt(int64(len(words)))
+  dictLength := big.NewInt(int64(len(words)))
   for i := 0; i < *pplen; i++ {
     var index *big.Int
     index, err = rand.Int(rand.Reader, dictLength)
