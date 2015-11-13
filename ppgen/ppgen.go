@@ -14,26 +14,25 @@ import (
 
 func main() {
   var dict        string = "/usr/share/dict/"
-  var lang        string = dict + os.Args[1]
+  var lang        string
   var words       []string
   var pplen       int64 = 4
   var maxWordLen  int64 = 10
   var err         error
   var dictLength  *big.Int
-  //byte[] latin1 = ...
-  //byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
 
   if len(os.Args) < 2 {
     fmt.Println("No language specified")
     listAvailDicts(dict)
     os.Exit(1)
   }
+  lang = dict + os.Args[1]
 
-  if len(os.Args) == 3 {
+  if len(os.Args) <= 2 {
     pplen, err = strconv.ParseInt(os.Args[2], 10, 0)
   }
 
-  if len(os.Args) == 4 {
+  if len(os.Args) <= 3 {
     maxWordLen, err = strconv.ParseInt(os.Args[3], 10, 0)
   }
 
@@ -47,6 +46,7 @@ func main() {
   words = readLines(lang, maxWordLen)
   fmt.Printf("  - %d\n", pplen)
   fmt.Printf("  - %d\n", len(words))
+  fmt.Printf("  - %d\n", maxWordLen)
 
   dictLength = big.NewInt(int64(len(words)))
   for i := 0; i < int(pplen); i++ {
