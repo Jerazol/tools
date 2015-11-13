@@ -5,19 +5,19 @@ import (
   "path/filepath"
   "fmt"
   "os"
-  "strconv"
   "crypto/rand"
   "math/big"
 	"unicode"
 	"unicode/utf8"
+  "flag"
 )
 
 func main() {
   var dict        string = "/usr/share/dict/"
-  var lang        string
+  var lang        *string
   var words       []string
-  var pplen       int64 = 4
-  var maxWordLen  int64 = 10
+  var pplen       *int
+  var wordMaxLen  *int
   var err         error
   var dictLength  *big.Int
 
@@ -26,30 +26,25 @@ func main() {
     listAvailDicts(dict)
     os.Exit(1)
   }
-  lang = dict + os.Args[1]
 
-  if len(os.Args) <= 2 {
-    pplen, err = strconv.ParseInt(os.Args[2], 10, 0)
-  }
 
-  if len(os.Args) <= 3 {
-    maxWordLen, err = strconv.ParseInt(os.Args[3], 10, 0)
-  }
+  lang, pplen, wordMaxLen = setFlags()
+  langPath := dict + *lang
 
-  _, err = os.Stat(lang)
+  _, err = os.Stat(langPath)
   if os.IsNotExist(err) {
-    fmt.Printf("%s is not installed\n", os.Args[1])
+    fmt.Printf("%s is not installed\n", lang)
     listAvailDicts(dict)
     os.Exit(1)
   }
 
-  words = readLines(lang, maxWordLen)
-  fmt.Printf("  - %d\n", pplen)
+  words = readLines(langPath, *wordMaxLen)
+  fmt.Printf("  - %d\n", *pplen)
   fmt.Printf("  - %d\n", len(words))
-  fmt.Printf("  - %d\n", maxWordLen)
+  fmt.Printf("  - %d\n", *wordMaxLen)
 
   dictLength = big.NewInt(int64(len(words)))
-  for i := 0; i < int(pplen); i++ {
+  for i := 0; i < *pplen; i++ {
     var index *big.Int
     index, err = rand.Int(rand.Reader, dictLength)
     word := []byte(words[index.Uint64()])
@@ -57,6 +52,16 @@ func main() {
   }
   fmt.Println("")
 }
+
+func setFlags() (*string, *int, *int){
+  lang        := flag.String("l", "", "Language to use for generating the passphrase")
+  numWords    := flag.Int("n", 5, "Number of words to use in the passphrase")
+  wordMaxLen  := flag.Int("m", 10, "Max length of words to use in passphrase")
+  flag.Parse()
+
+  return lang, numWords, wordMaxLen
+}
+
 
 
 func toUtf8(iso8859_1_buf []byte) string {
@@ -92,7 +97,7 @@ func listAvailDicts(dictPath string) {
 
 // readLines reads a whole file into memory
 // and returns a slice of its lines.
-func readLines(path string, maxWordLen int64) ([]string) {
+func readLines(path string, wordMaxLen int) ([]string) {
   file, err := os.Open(path)
   if err != nil {
     return nil
@@ -103,7 +108,7 @@ func readLines(path string, maxWordLen int64) ([]string) {
   scanner := bufio.NewScanner(file)
   for scanner.Scan() {
     word := scanner.Text()
-    if (int64(len(word)) <= maxWordLen) {
+    if (len(word) <= wordMaxLen) {
       lines = append(lines, word)
     }
   }
