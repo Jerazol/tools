@@ -14,27 +14,22 @@ import (
 
 func main() {
   var dict        string = "/usr/share/dict/"
-  var lang        *string
   var words       []string
-  var pplen       *int
-  var wordMaxLen  *int
   var err         error
   var dictLength  *big.Int
 
-  if len(os.Args) < 2 {
-    fmt.Println("No language specified")
-    listAvailDicts(dict)
+  lang, pplen, wordMaxLen := setFlags()
+  langPath := dict + *lang
+
+  if len(*lang) == 0 {
+    usage(dict)
     os.Exit(1)
   }
 
-
-  lang, pplen, wordMaxLen = setFlags()
-  langPath := dict + *lang
-
   _, err = os.Stat(langPath)
   if os.IsNotExist(err) {
-    fmt.Printf("%s is not installed\n", lang)
-    listAvailDicts(dict)
+    fmt.Printf("Language \"%s\" is not installed\n\n", *lang)
+    usage(dict)
     os.Exit(1)
   }
 
@@ -80,8 +75,10 @@ func upperFirst(s string) string {
 	return string(unicode.ToUpper(r)) + s[n:]
 }
 
-func listAvailDicts(dictPath string) {
-  fmt.Println("---")
+func usage(dictPath string) {
+  fmt.Println("Usage:")
+  flag.PrintDefaults()
+  fmt.Println("")
   fmt.Println("Available languages")
   fmt.Println("===================")
   filepath.Walk(
