@@ -10,11 +10,11 @@ import (
   "unicode"
   "unicode/utf8"
   "flag"
+  "math"
 )
 
 func main() {
   var dicts       string = "/usr/share/dict/"
-  var err         error
 
   lang, pplen, wordMaxLen := setFlags()
   langPath := dicts + *lang
@@ -24,28 +24,70 @@ func main() {
     os.Exit(1)
   }
 
-  _, err = os.Stat(langPath)
+  _, err := os.Stat(langPath)
   if os.IsNotExist(err) {
     fmt.Printf("Language \"%s\" is not installed\n\n", *lang)
     usage(dicts)
     os.Exit(1)
   }
 
-  words := readLines(langPath, *wordMaxLen)
-  fmt.Printf("  - %d\n", *pplen)
-  fmt.Printf("  - %d\n", len(words))
-  fmt.Printf("  - %d\n", *wordMaxLen)
+  words := readDict(langPath, *wordMaxLen)
+  combinations := math.Pow(float64(len(words)), float64(*pplen))
+  fmt.Printf("\n%d words in dictionary giving a total of %e possible passphrases.\n\n", len(words), combinations)
 
   dictLength := big.NewInt(int64(len(words)))
   for i := 0; i < *pplen; i++ {
     var index *big.Int
     index, err = rand.Int(rand.Reader, dictLength)
     word := []byte(words[index.Uint64()])
-    fmt.Printf("%s", upperFirst(toUtf8(word)))
+    fmt.Printf("%s", ucFirst(toUtf8(word)))
   }
   fmt.Println("")
 }
 
+
+//Convert provided []byte from latin1 to UTF-8
+func toUtf8(iso8859_1_buf []byte) string {
+    buf := make([]rune, len(iso8859_1_buf))
+    for i, b := range iso8859_1_buf {
+        buf[i] = rune(b)
+    }
+    return string(buf)
+}
+
+
+//Uppercase first letter of provided string
+func ucFirst(s string) string {
+	if s == "" {
+		return ""
+	}
+	r, n := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[n:]
+}
+
+
+// reads provided dictionary into memory
+// and returns a slice of its words.
+func readDict(path string, wordMaxLen int) ([]string) {
+  file, err := os.Open(path)
+  if err != nil {
+    return nil
+  }
+  defer file.Close()
+
+  var words []string
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    word := scanner.Text()
+    if (len(word) <= wordMaxLen) {
+      words = append(words, word)
+    }
+  }
+  return words
+}
+
+
+// Define program arguments and default values
 func setFlags() (*string, *int, *int){
   lang        := flag.String("l", "", "Language to use for generating the passphrase")
   numWords    := flag.Int("n", 5, "Number of words to use in the passphrase")
@@ -56,23 +98,7 @@ func setFlags() (*string, *int, *int){
 }
 
 
-
-func toUtf8(iso8859_1_buf []byte) string {
-    buf := make([]rune, len(iso8859_1_buf))
-    for i, b := range iso8859_1_buf {
-        buf[i] = rune(b)
-    }
-    return string(buf)
-}
-
-func upperFirst(s string) string {
-	if s == "" {
-		return ""
-	}
-	r, n := utf8.DecodeRuneInString(s)
-	return string(unicode.ToUpper(r)) + s[n:]
-}
-
+// Print usage and a list of available dictionaries
 func usage(dictPath string) {
   fmt.Println("Usage:")
   flag.PrintDefaults()
@@ -88,24 +114,4 @@ func usage(dictPath string) {
       return nil
     },
   )
-}
-
-// readLines reads a whole file into memory
-// and returns a slice of its lines.
-func readLines(path string, wordMaxLen int) ([]string) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil
-  }
-  defer file.Close()
-
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    word := scanner.Text()
-    if (len(word) <= wordMaxLen) {
-      lines = append(lines, word)
-    }
-  }
-  return lines
 }
