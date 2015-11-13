@@ -7,8 +7,8 @@ import (
   "os"
   "crypto/rand"
   "math/big"
-	"unicode"
-	"unicode/utf8"
+  "unicode"
+  "unicode/utf8"
   "flag"
 )
 
