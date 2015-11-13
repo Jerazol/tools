@@ -16,29 +16,41 @@ import (
 func main() {
   var dicts       string = "/usr/share/dict/"
 
-  lang, pplen, wordMaxLen := setFlags()
-  langPath := dicts + *lang
+  lang, ppWords, wordMaxLen, numPhrases := setFlags()
+  dictPath := dicts + *lang
 
   if len(*lang) == 0 {
     usage(dicts)
     os.Exit(1)
   }
 
-  _, err := os.Stat(langPath)
+  _, err := os.Stat(dictPath)
   if os.IsNotExist(err) {
     fmt.Printf("Language \"%s\" is not installed\n\n", *lang)
     usage(dicts)
     os.Exit(1)
   }
 
-  words := readDict(langPath, *wordMaxLen)
-  combinations := math.Pow(float64(len(words)), float64(*pplen))
-  fmt.Printf("\n%d words in dictionary giving a total of %e possible passphrases.\n\n", len(words), combinations)
+  words         := readDict(dictPath, *wordMaxLen)
+  combinations  := math.Pow(float64(len(words)), float64(*ppWords))
 
+  fmt.Printf("\n%d words in dictionary giving a total of %g possible passphrases.\n\n", len(words), combinations)
+  for index := 0; index < *numPhrases; index++ {
+    buildPhrases(words, *ppWords)
+  }
+  fmt.Println("")
+}
+
+
+func buildPhrases(words []string, ppWords int) {
   dictLength := big.NewInt(int64(len(words)))
-  for i := 0; i < *pplen; i++ {
-    var index *big.Int
-    index, err = rand.Int(rand.Reader, dictLength)
+  fmt.Print(": ")
+  for i := 0; i < ppWords; i++ {
+    index, err := rand.Int(rand.Reader, dictLength)
+    if err != nil {
+      fmt.Println("Something strange happened")
+      return
+    }
     word := []byte(words[index.Uint64()])
     fmt.Printf("%s", ucFirst(toUtf8(word)))
   }
@@ -48,11 +60,11 @@ func main() {
 
 //Convert provided []byte from latin1 to UTF-8
 func toUtf8(iso8859_1_buf []byte) string {
-    buf := make([]rune, len(iso8859_1_buf))
-    for i, b := range iso8859_1_buf {
-        buf[i] = rune(b)
-    }
-    return string(buf)
+  buf := make([]rune, len(iso8859_1_buf))
+  for i, b := range iso8859_1_buf {
+    buf[i] = rune(b)
+  }
+  return string(buf)
 }
 
 
@@ -88,13 +100,14 @@ func readDict(path string, wordMaxLen int) ([]string) {
 
 
 // Define program arguments and default values
-func setFlags() (*string, *int, *int){
+func setFlags() (*string, *int, *int, *int){
   lang        := flag.String("l", "", "Language to use for generating the passphrase")
   numWords    := flag.Int("n", 5, "Number of words to use in the passphrase")
   wordMaxLen  := flag.Int("m", 10, "Max length of words to use in passphrase")
+  numPhrases  := flag.Int("c", 10, "Number of passphrases to generate")
   flag.Parse()
 
-  return lang, numWords, wordMaxLen
+  return lang, numWords, wordMaxLen, numPhrases
 }
 
 
