@@ -54,10 +54,10 @@ func main() {
     os.Exit(1)
   }
 
-  words         := readDict(dictPath, *wordMaxLen)
-  combinations  := math.Pow(float64(len(words)), float64(*ppWords))
-
-  fmt.Printf("\n%d words in dictionary giving a total of %g possible passphrases.\n\n", len(words), combinations)
+  words   := readDict(dictPath, *wordMaxLen)
+  entropy := math.Log2(float64(len(words)))*float64(*ppWords)
+  fmt.Printf("%d words in dictionary giving a total of %g bit entropy.\n\n", len(words), entropy)
+  
   for index := 0; index < *numPhrases; index++ {
     buildPhrases(words, *ppWords)
   }
@@ -65,8 +65,8 @@ func main() {
 }
 
 
-// Generate a random passphrase of ppWords length
-// using the provided words slice
+// buildPhrases generates a random passphrase of ppWords length using the
+// provided words slice
 func buildPhrases(words []string, ppWords int) {
   dictLength := big.NewInt(int64(len(words)))
   fmt.Print(": ")
@@ -83,7 +83,7 @@ func buildPhrases(words []string, ppWords int) {
 }
 
 
-// Convert provided []byte from latin1 to UTF-8
+// toUtf8 convert provided []byte from latin1 to UTF-8
 func toUtf8(iso8859_1_buf []byte) string {
   buf := make([]rune, len(iso8859_1_buf))
   for i, b := range iso8859_1_buf {
@@ -93,7 +93,7 @@ func toUtf8(iso8859_1_buf []byte) string {
 }
 
 
-// Uppercase first letter of provided string
+// ucFirst uppercases the first letter of the provided string
 func ucFirst(s string) string {
 	if s == "" {
 		return ""
@@ -103,8 +103,7 @@ func ucFirst(s string) string {
 }
 
 
-// reads provided dictionary into memory
-// and returns a slice of its words.
+// readDict reads provided dictionary into memory and returns a slice of its words.
 func readDict(path string, wordMaxLen int) ([]string) {
   file, err := os.Open(path)
   if err != nil {
