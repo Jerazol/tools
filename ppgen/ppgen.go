@@ -57,7 +57,7 @@ func main() {
   words   := readDict(dictPath, *wordMaxLen)
   entropy := math.Log2(float64(len(words)))*float64(*ppWords)
   fmt.Printf("%d words in dictionary giving a total of %g bit entropy.\n\n", len(words), entropy)
-  
+
   for index := 0; index < *numPhrases; index++ {
     buildPhrases(words, *ppWords)
   }
@@ -69,7 +69,7 @@ func main() {
 // provided words slice
 func buildPhrases(words []string, ppWords int) {
   dictLength := big.NewInt(int64(len(words)))
-  fmt.Print(": ")
+  password := ""
   for i := 0; i < ppWords; i++ {
     index, err := rand.Int(rand.Reader, dictLength)
     if err != nil {
@@ -77,9 +77,9 @@ func buildPhrases(words []string, ppWords int) {
       return
     }
     word := []byte(words[index.Uint64()])
-    fmt.Printf("%s", ucFirst(toUtf8(word)))
+    password += ucFirst(toUtf8(word))
   }
-  fmt.Println("")
+  fmt.Printf(": %-60s - Brute force giving a total of %.1f bit entropy.\n", password, math.Log2(float64(58))*float64(len(password)))
 }
 
 
